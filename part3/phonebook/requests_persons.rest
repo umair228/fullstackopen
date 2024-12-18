@@ -1,0 +1,17 @@
+GET http://localhost:3001/api/persons
+Accept: application/json
+
+###
+# get request for a person with id 2
+GET http://localhost:3001/api/persons/2
+Accept: application/json
+
+###
+# post request to create a new person
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Umair Khan",
+  "number": "03213212321"
+}
