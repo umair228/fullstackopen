@@ -1,8 +1,41 @@
 const express = require('express');
+const morgan = require("morgan");
+const logger = require("./utils/logger");
+
+
 const app = express();
 
+
+
+// Middleware to parse JSON data
 app.use(express.json());
 
+// Middleware to log requests
+// Create a custom token for logging request body
+morgan.token("body", (req) => {
+    return req.body ? JSON.stringify(req.body) : "No Body";
+});
+
+// Define the Morgan format with the custom token
+const morganFormat = ":method :url :status :response-time ms - Body: :body";
+
+// Use Morgan middleware with the custom format
+app.use(
+    morgan(morganFormat, {
+        stream: {
+            write: (message) => {
+                const logObject = {
+                    method: message.split(" ")[0],
+                    url: message.split(" ")[1],
+                    status: message.split(" ")[2],
+                    responseTime: message.split(" ")[3],
+                    body: message.split("Body: ")[1],
+                };
+                logger.info(JSON.stringify(logObject));
+            },
+        },
+    })
+);
 
 var persons = [
     {
@@ -90,6 +123,7 @@ app.post('/api/persons', (req, res) => {
 
     // Add to the persons array
     persons = persons.concat(person);
+
 
     // Respond with the newly added person
     res.status(201).json(person);
