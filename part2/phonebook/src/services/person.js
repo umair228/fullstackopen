@@ -1,5 +1,6 @@
 import axios from 'axios'
-const baseUrl = 'http://localhost:3001/persons'
+// Use relative URL so it works both in dev (via Vite proxy) and in production (served by backend)
+const baseUrl = '/api/persons'
 
 
 const getAll = () => {

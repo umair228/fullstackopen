@@ -1,41 +1,19 @@
 const express = require('express');
 const morgan = require("morgan");
-const logger = require("./utils/logger");
-
+const cors = require('cors')
 
 const app = express();
 
-
-
+app.use(cors());
 // Middleware to parse JSON data
 app.use(express.json());
 
-// Middleware to log requests
-// Create a custom token for logging request body
-morgan.token("body", (req) => {
-    return req.body ? JSON.stringify(req.body) : "No Body";
-});
+// Serve frontend production build (dist) from backend
+app.use(express.static('dist'));
 
-// Define the Morgan format with the custom token
-const morganFormat = ":method :url :status :response-time ms - Body: :body";
-
-// Use Morgan middleware with the custom format
-app.use(
-    morgan(morganFormat, {
-        stream: {
-            write: (message) => {
-                const logObject = {
-                    method: message.split(" ")[0],
-                    url: message.split(" ")[1],
-                    status: message.split(" ")[2],
-                    responseTime: message.split(" ")[3],
-                    body: message.split("Body: ")[1],
-                };
-                logger.info(JSON.stringify(logObject));
-            },
-        },
-    })
-);
+// 3.7-3.8*: request logging with morgan (incl. POST body)
+morgan.token('body', (req) => (req.method === 'POST' ? JSON.stringify(req.body) : ''));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
 var persons = [
     {
@@ -129,7 +107,7 @@ app.post('/api/persons', (req, res) => {
     res.status(201).json(person);
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
