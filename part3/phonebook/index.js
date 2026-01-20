@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require("morgan");
 const cors = require('cors')
+const path = require('path')
+const fs = require('fs')
 
 const app = express();
 
@@ -9,11 +11,26 @@ app.use(cors());
 app.use(express.json());
 
 // Serve frontend production build (dist) from backend
-app.use(express.static('dist'));
+const distPath = path.join(__dirname, 'dist')
+app.use(express.static(distPath));
 
 // 3.7-3.8*: request logging with morgan (incl. POST body)
 morgan.token('body', (req) => (req.method === 'POST' ? JSON.stringify(req.body) : ''));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
+
+// SPA fallback: serve React index.html for non-API GET routes (requires dist build to exist)
+app.use((req, res, next) => {
+    if (req.method !== 'GET') return next()
+    if (req.path.startsWith('/api')) return next()
+    if (req.path === '/info') return next()
+
+    const indexPath = path.join(distPath, 'index.html')
+    if (!fs.existsSync(indexPath)) {
+        return res.status(404).send('Frontend build not found. Build frontend and copy dist/ into part3/phonebook.')
+    }
+
+    return res.sendFile(indexPath)
+})
 
 var persons = [
     {
